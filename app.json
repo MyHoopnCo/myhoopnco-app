@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "myhoopnco-app-expo",
+    "name": "MyHoop",
     "slug": "myhoopnco-app-expo",
+    "owner": "myhoop",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +14,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.myhoop.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +23,22 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.habeeb104.myhoop.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f146e683-aa23-4fbe-b8d7-cac7a30abf9c"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f146e683-aa23-4fbe-b8d7-cac7a30abf9c"
+      }
     }
   }
 }

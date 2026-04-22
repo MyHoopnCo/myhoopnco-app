@@ -1,0 +1,221 @@
+name: MyHoop CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ─────────────────────────────────────────────
+  # 1. LINT
+  # ─────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: TypeScript type check
+        run: npm run type-check
+
+  # ─────────────────────────────────────────────
+  # 2. UNIT TESTS
+  # ─────────────────────────────────────────────
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit -- --ci --reporters=default --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ./reports
+          JEST_JUNIT_OUTPUT_NAME: unit-results.xml
+          JEST_JUNIT_CLASSNAME: '{classname}'
+          JEST_JUNIT_TITLE: '{title}'
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: reports/unit-results.xml
+
+  # ─────────────────────────────────────────────
+  # 3. INTEGRATION TESTS (Firebase emulator)
+  # ─────────────────────────────────────────────
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Cache Firebase emulator binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ hashFiles('firebase.json') }}
+
+      - name: Run integration tests (with emulator)
+        run: npm run test:integration -- --ci --reporters=default --reporters=jest-junit
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ./reports
+          JEST_JUNIT_OUTPUT_NAME: integration-results.xml
+          JEST_JUNIT_CLASSNAME: '{classname}'
+          JEST_JUNIT_TITLE: '{title}'
+          FIREBASE_AUTH_EMULATOR_HOST: 'localhost:9099'
+          FIRESTORE_EMULATOR_HOST: 'localhost:8080'
+          FIREBASE_DATABASE_EMULATOR_HOST: 'localhost:9000'
+          FIREBASE_STORAGE_EMULATOR_HOST: 'localhost:9199'
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: reports/integration-results.xml
+
+  # ─────────────────────────────────────────────
+  # 4. TEST REPORT (CI summary + PR comment)
+  # ─────────────────────────────────────────────
+  test-report:
+    name: Test report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    if: always()
+    permissions:
+      checks: write
+      pull-requests: write
+    steps:
+      - name: Download unit test results
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-results
+          path: reports
+
+      - name: Download integration test results
+        uses: actions/download-artifact@v4
+        with:
+          name: integration-test-results
+          path: reports
+
+      - name: Publish test report to GitHub
+        uses: dorny/test-reporter@v1
+        with:
+          name: MyHoop test results
+          path: 'reports/*.xml'
+          reporter: jest-junit
+          fail-on-error: true
+
+      - name: Post PR comment with test summary
+        if: github.event_name == 'pull_request'
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: 'reports/*.xml'
+          comment_title: 'Test summary'
+          check_name: 'MyHoop tests'
+          fail_on: 'test failures'
+
+  # ─────────────────────────────────────────────
+  # 5. EAS BUILD
+  # ─────────────────────────────────────────────
+  build:
+    name: EAS Build
+    runs-on: ubuntu-latest
+    needs: test-report
+    if: needs.test-report.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build preview (PR)
+        if: github.event_name == 'pull_request'
+        run: eas build --platform all --profile preview --non-interactive
+
+      - name: Build production (main)
+        if: github.ref == 'refs/heads/main'
+        run: eas build --platform all --profile production --non-interactive
+
+  # ─────────────────────────────────────────────
+  # 6. DEPLOY
+  # ─────────────────────────────────────────────
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish to preview channel (PR)
+        if: github.event_name == 'pull_request'
+        run: eas update --channel preview --message "PR #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }}"
+
+      - name: Publish to production channel (main)
+        if: github.ref == 'refs/heads/main'
+        run: eas update --channel production --message "Release ${{ github.sha }}"
