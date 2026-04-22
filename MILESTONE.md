@@ -14,10 +14,10 @@ A milestone is considered done when all tests in its gate column pass in CI.
 
 ---
 
-## How to use this during sprints
+## Notes
 
 At the start of each milestone, the team agrees which test IDs are in scope for that sprint.
-Those tests should be written (or exist as stubs) before implementation begins — spec first,
+Those tests should be written before implementation begins. Spec first,
 then code.
 
 EJ's bi-weekly architecture reviews should include a check of the CI test summary report
@@ -25,8 +25,6 @@ for the milestone's gated test IDs. Any failing ID in the gate column blocks the
 from being marked done, regardless of how the feature looks in the UI.
 
 ---
-
-## Running only a milestone's tests locally
 
 Use Jest's `--testNamePattern` flag with the ID prefix:
 
