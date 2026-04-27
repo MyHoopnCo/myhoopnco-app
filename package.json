@@ -7,18 +7,24 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-        "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
     "test:unit": "jest --selectProjects unit",
     "test:integration": "jest --selectProjects integration",
     "test": "npm run test:unit && npm run test:integration"
   },
   "dependencies": {
+    "@react-navigation/bottom-tabs": "^7.15.10",
+    "@react-navigation/native": "^7.2.2",
     "expo": "~54.0.33",
     "expo-status-bar": "~3.0.9",
     "firebase": "^12.12.0",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-web": "^0.21.0"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",
