@@ -5,12 +5,12 @@ import { getDatabase } from 'firebase/database';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: process.env.AIzaSyAvi29kQe8RADPNipNFpEQS18YXgtWsPqI ?? '',
-  appId: process.env.1:862491854517:web:c2018b0e2f14ee3c5de0fc ?? '',
-  projectId: process.env.myhoopapp-60fc9 ?? '',
-  authDomain: `${process.env.myhoopapp-60fc9}.firebaseapp.com`,
-  storageBucket: `${process.env.myhoopapp-60fc9}.appspot.com`,
-  databaseURL: `https://${process.env.myhoopapp-60fc9}-default-rtdb.firebaseio.com`,
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? '',
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? '',
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
+  databaseURL: process.env.EXPO_PUBLIC_FIREBASE_DATABASE_URL ?? '',
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
