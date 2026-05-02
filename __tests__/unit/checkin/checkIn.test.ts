@@ -1,17 +1,18 @@
 /**
  * CHECKIN unit tests — spec: TEST_SPEC.md § Check-in
  */
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react';
 import { useCheckIn } from '@/hooks/useCheckIn';
-import { db as firestoreMock } from '@/lib/firebase';
+import { updateDoc } from 'firebase/firestore';
 
 jest.mock('@/lib/firebase', () => ({
-  db: {
-    collection: jest.fn().mockReturnThis(),
-    doc: jest.fn().mockReturnThis(),
-    update: jest.fn().mockResolvedValue(undefined),
-  },
+  db: {},
   auth: { currentUser: { uid: 'user-abc' } },
+}));
+
+jest.mock('firebase/firestore', () => ({
+  doc: jest.fn().mockReturnThis(),
+  updateDoc: jest.fn().mockResolvedValue(undefined),
 }));
 
 const NOW = 1_700_000_000_000;
@@ -33,7 +34,7 @@ describe('useCheckIn — unit', () => {
       await result.current.checkIn('facility-xyz');
     });
 
-    expect(firestoreMock.update).toHaveBeenCalledWith(
+    expect(updateDoc).toHaveBeenCalledWith(
       expect.objectContaining({
         checkedInAt: 'facility-xyz',
         checkInExpiry: NOW + 2 * 60 * 60 * 1000,
@@ -48,7 +49,7 @@ describe('useCheckIn — unit', () => {
       await result.current.checkIn('facility-xyz');
     });
 
-    const call = (firestoreMock.update as jest.Mock).mock.calls[0][0];
+    const call = (updateDoc as jest.Mock).mock.calls[0][0];
     const expected = NOW + 2 * 60 * 60 * 1000;
     expect(Math.abs(call.checkInExpiry - expected)).toBeLessThanOrEqual(1000);
   });
@@ -60,7 +61,7 @@ describe('useCheckIn — unit', () => {
       await result.current.checkOut();
     });
 
-    expect(firestoreMock.update).toHaveBeenCalledWith(
+    expect(updateDoc).toHaveBeenCalledWith(
       expect.objectContaining({ checkedInAt: null }),
     );
   });
@@ -73,7 +74,7 @@ describe('useCheckIn — unit', () => {
       await result.current.checkIn('facility-bbb');
     });
 
-    const lastCall = (firestoreMock.update as jest.Mock).mock.calls.at(-1)[0];
+    const lastCall = (updateDoc as jest.Mock).mock.calls.at(-1)[0];
     expect(lastCall.checkedInAt).toBe('facility-bbb');
   });
 });

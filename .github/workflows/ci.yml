@@ -104,6 +104,9 @@ jobs:
           FIRESTORE_EMULATOR_HOST: 'localhost:8080'
           FIREBASE_DATABASE_EMULATOR_HOST: 'localhost:9000'
           FIREBASE_STORAGE_EMULATOR_HOST: 'localhost:9199'
+          EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.EXPO_PUBLIC_FIREBASE_API_KEY }}
+          EXPO_PUBLIC_FIREBASE_APP_ID: ${{ secrets.EXPO_PUBLIC_FIREBASE_APP_ID }}
+          EXPO_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.EXPO_PUBLIC_FIREBASE_PROJECT_ID }}
 
       - name: Upload integration test results
         if: always()
