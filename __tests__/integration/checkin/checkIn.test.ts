@@ -59,18 +59,22 @@ describe('useCheckIn — integration', () => {
     await seedUser('user-alice');
     await seedFacility('gym-01', 2);
 
-    const ctx = testEnv.authenticatedContext('user-alice');
-    const fs = ctx.firestore();
+    const alice = testEnv.authenticatedContext('user-alice');
+    const fsAlice = alice.firestore();
 
-    await updateDoc(doc(fs, 'users', 'user-alice'), {
+    await updateDoc(doc(fsAlice, 'users', 'user-alice'), {
       checkedInAt: 'gym-01',
       checkInExpiry: Date.now() + 2 * 60 * 60 * 1000,
     });
-    await updateDoc(doc(fs, 'facilities', 'gym-01'), {
+
+    // Facility writes require admin (see firestore.rules); client check-in only updates `users`.
+    const admin = testEnv.authenticatedContext('user-bryan', { admin: true });
+    const fsAdmin = admin.firestore();
+    await updateDoc(doc(fsAdmin, 'facilities', 'gym-01'), {
       activeUsers: 3,
     });
 
-    const facilitySnap = await getDoc(doc(fs, 'facilities', 'gym-01'));
+    const facilitySnap = await getDoc(doc(fsAlice, 'facilities', 'gym-01'));
     expect(facilitySnap.data()?.activeUsers).toBe(3);
   });
 
@@ -78,18 +82,20 @@ describe('useCheckIn — integration', () => {
     await seedUser('user-alice', { checkedInAt: 'gym-01' });
     await seedFacility('gym-01', 1);
 
-    const ctx = testEnv.authenticatedContext('user-alice');
-    const fs = ctx.firestore();
+    const alice = testEnv.authenticatedContext('user-alice');
+    const fsAlice = alice.firestore();
 
-    await updateDoc(doc(fs, 'users', 'user-alice'), {
+    await updateDoc(doc(fsAlice, 'users', 'user-alice'), {
       checkedInAt: null,
       checkInExpiry: null,
     });
-    await updateDoc(doc(fs, 'facilities', 'gym-01'), {
+
+    const admin = testEnv.authenticatedContext('user-bryan', { admin: true });
+    await updateDoc(doc(admin.firestore(), 'facilities', 'gym-01'), {
       activeUsers: 0,
     });
 
-    const facilitySnap = await getDoc(doc(fs, 'facilities', 'gym-01'));
+    const facilitySnap = await getDoc(doc(fsAlice, 'facilities', 'gym-01'));
     expect(facilitySnap.data()?.activeUsers).toBeGreaterThanOrEqual(0);
   });
 

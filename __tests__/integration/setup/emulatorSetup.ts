@@ -9,11 +9,14 @@ import { getDatabase, connectDatabaseEmulator } from 'firebase/database';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
 const TEST_PROJECT_ID = 'myhoop-test';
+const TEST_APP_NAME = 'test-app';
 
 beforeAll(async () => {
-  // Clean up any leftover app instances from a previous test file
-  for (const app of getApps()) {
-    await deleteApp(app);
+  // Only remove our named app. Do not deleteApp(getApps()) — that tears down
+  // internal `_Firebase_RulesUnitTesting_*` apps and breaks testEnv.cleanup().
+  const existing = getApps().find((a) => a.name === TEST_APP_NAME);
+  if (existing) {
+    await deleteApp(existing);
   }
 
   const app = initializeApp(
@@ -26,7 +29,7 @@ beforeAll(async () => {
       appId: '1:000000000000:web:testappid',
       databaseURL: `http://localhost:9000?ns=${TEST_PROJECT_ID}`,
     },
-    'test-app',
+    TEST_APP_NAME,
   );
 
   connectAuthEmulator(getAuth(app), 'http://localhost:9099', {
@@ -38,7 +41,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  for (const app of getApps()) {
-    await deleteApp(app);
+  const testApp = getApps().find((a) => a.name === TEST_APP_NAME);
+  if (testApp) {
+    await deleteApp(testApp);
   }
 });
