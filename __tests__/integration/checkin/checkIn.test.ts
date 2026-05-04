@@ -9,6 +9,8 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import fs from 'fs';
 import path from 'path';
 
+import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
+
 const projectRoot = path.resolve(__dirname, '../../..');
 
 let testEnv: RulesTestEnvironment;
@@ -83,7 +85,7 @@ describe('useCheckIn — integration', () => {
     });
 
     const facilitySnap = await getDoc(doc(fsAlice, 'facilities', 'gym-01'));
-    expect(facilitySnap.data()?.activeUsers).toBe(3);
+    assertFails(facilitySnap.data()?.activeUsers).toBe(3);
   });
 
   it('CHECKIN-I-02 check-out decrements Facility.activeUsers (floor 0)', async () => {
@@ -104,7 +106,7 @@ describe('useCheckIn — integration', () => {
     });
 
     const facilitySnap = await getDoc(doc(fsAlice, 'facilities', 'gym-01'));
-    expect(facilitySnap.data()?.activeUsers).toBeGreaterThanOrEqual(0);
+    assertFails(facilitySnap.data()?.activeUsers).toBeGreaterThanOrEqual(0);
   });
 
   it('CHECKIN-I-03 user cannot write checkedInAt on another user document', async () => {
@@ -114,9 +116,9 @@ describe('useCheckIn — integration', () => {
     const ctx = testEnv.authenticatedContext('user-alice');
     const fs = ctx.firestore();
 
-    await expect(
+    await assertFails(
       updateDoc(doc(fs, 'users', 'user-bob'), { checkedInAt: 'gym-01' }),
-    ).rejects.toThrow(/permission-denied/i);
+    );
   });
 
   it('CHECKIN-I-04 checkInExpiry written during check-in equals now + 2 hours', async () => {
@@ -138,6 +140,6 @@ describe('useCheckIn — integration', () => {
     const snap = await getDoc(doc(fs, 'users', 'user-alice'));
     const stored = snap.data()?.checkInExpiry as number;
 
-    expect(Math.abs(stored - expectedExpiry)).toBeLessThanOrEqual(1000);
+    assertFails(Math.abs(stored - expectedExpiry)).toBeLessThanOrEqual(1000);
   });
 });

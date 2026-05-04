@@ -14,6 +14,8 @@ import { ref, remove, set } from 'firebase/database';
 import fs from 'fs';
 import path from 'path';
 
+import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
+
 const projectRoot = path.resolve(__dirname, '../../..');
 
 let testEnv: RulesTestEnvironment;
@@ -78,13 +80,13 @@ describe('Security rules — integration', () => {
     const ctx = testEnv.unauthenticatedContext();
     const fs = ctx.firestore();
 
-    await expect(
+    await assertFails(
       getDoc(doc(fs, 'facilities', 'gym-01')),
-    ).rejects.toThrow(/permission-denied/i);
+    );
 
-    await expect(
+    await assertFails(
       getDoc(doc(fs, 'users', 'some-uid')),
-    ).rejects.toThrow(/permission-denied/i);
+    );
   });
 
   it('SEC-I-02 authenticated user cannot write a facilities document', async () => {
@@ -93,9 +95,9 @@ describe('Security rules — integration', () => {
     const ctx = testEnv.authenticatedContext('user-alice');
     const fs = ctx.firestore();
 
-    await expect(
+    await assertFails(
       updateDoc(doc(fs, 'facilities', 'gym-01'), { name: 'Hacked Gym' }),
-    ).rejects.toThrow(/permission-denied/i);
+    );
   });
 
   it('SEC-I-03 facility write succeeds only when request.auth has admin custom claim', async () => {
@@ -103,17 +105,17 @@ describe('Security rules — integration', () => {
 
     // Without admin claim — must be denied
     const regularCtx = testEnv.authenticatedContext('user-alice');
-    await expect(
+    await assertFails(
       updateDoc(doc(regularCtx.firestore(), 'facilities', 'gym-01'), {
         openGymHours: 'Mon–Sat 6am–11pm',
       }),
-    ).rejects.toThrow(/permission-denied/i);
+    );
 
     // With admin custom claim (emulator token override) — must succeed
     const adminCtx = testEnv.authenticatedContext('user-bryan', {
       admin: true,
     });
-    await expect(
+    await assertFails(
       updateDoc(doc(adminCtx.firestore(), 'facilities', 'gym-01'), {
         openGymHours: 'Mon–Sat 6am–11pm',
       }),
@@ -127,7 +129,7 @@ describe('Security rules — integration', () => {
       moderator: true,
     });
 
-    await expect(
+    await assertFails(
       remove(ref(modCtx.database(), 'chats/gym-01/messages/msg-001')),
     ).resolves.toBeUndefined();
   });
@@ -137,8 +139,8 @@ describe('Security rules — integration', () => {
 
     const ctx = testEnv.authenticatedContext('user-bob');
 
-    await expect(
+    await assertFails(
       remove(ref(ctx.database(), 'chats/gym-01/messages/msg-001')),
-    ).rejects.toThrow(/permission-denied/i);
+    );
   });
 });
