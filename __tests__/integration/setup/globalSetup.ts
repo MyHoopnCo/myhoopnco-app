@@ -30,7 +30,7 @@ module.exports = async () => {
   console.log('[test setup] Emulators ready.\n');
 };
 
-async function waitForEmulators(retries = 30, delayMs = 1000): Promise<void> {
+async function waitForEmulators(retries = 90, delayMs = 1000): Promise<void> {
   for (let i = 0; i < retries; i++) {
     try {
       execSync('curl -s http://localhost:4000/ > /dev/null', { stdio: 'ignore' });
@@ -39,5 +39,5 @@ async function waitForEmulators(retries = 30, delayMs = 1000): Promise<void> {
       await new Promise((r) => setTimeout(r, delayMs));
     }
   }
-  throw new Error('Firebase emulators did not start within 30 seconds.');
+  throw new Error('Firebase emulators did not start within 90 seconds.');
 }
