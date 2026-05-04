@@ -129,9 +129,9 @@ describe('Security rules — integration', () => {
       moderator: true,
     });
 
-    await assertFails(
+    await assertSucceeds(
       remove(ref(modCtx.database(), 'chats/gym-01/messages/msg-001')),
-    ).resolves.toBeUndefined();
+    );
   });
 
   it('SEC-I-05 regular user cannot delete another user\'s message', async () => {
