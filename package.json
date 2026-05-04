@@ -10,7 +10,7 @@
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
     "test:unit": "jest --selectProjects unit",
-    "test:integration": "jest --selectProjects integration",
+    "test:integration": "jest --selectProjects integration --maxWorkers=1",
     "test": "npm run test:unit && npm run test:integration"
   },
   "dependencies": {

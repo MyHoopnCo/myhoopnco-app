@@ -11,14 +11,26 @@ import {
 } from '@firebase/rules-unit-testing';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, remove, set } from 'firebase/database';
+import fs from 'fs';
+import path from 'path';
+
+const projectRoot = path.resolve(__dirname, '../../..');
 
 let testEnv: RulesTestEnvironment;
 
 beforeAll(async () => {
   testEnv = await initializeTestEnvironment({
     projectId: 'myhoop-test',
-    firestore: { host: 'localhost', port: 8080 },
-    database: { host: 'localhost', port: 9000 },
+    firestore: {
+      host: 'localhost',
+      port: 8080,
+      rules: fs.readFileSync(path.join(projectRoot, 'firestore.rules'), 'utf8'),
+    },
+    database: {
+      host: 'localhost',
+      port: 9000,
+      rules: fs.readFileSync(path.join(projectRoot, 'database.rules.json'), 'utf8'),
+    },
   });
 });
 
@@ -32,8 +44,8 @@ beforeEach(async () => {
 });
 
 async function seedFacility(facilityId: string) {
-  const admin = testEnv.unauthenticatedContext();
-  await setDoc(doc(admin.firestore(), 'facilities', facilityId), {
+  const adminCtx = testEnv.authenticatedContext('user-bryan', { admin: true });
+  await setDoc(doc(adminCtx.firestore(), 'facilities', facilityId), {
     facilityId,
     name: 'Test Gym',
     type: 'rec_center',
@@ -47,9 +59,9 @@ async function seedFacility(facilityId: string) {
 }
 
 async function seedMessage(facilityId: string, messageId: string, senderUid: string) {
-  const admin = testEnv.unauthenticatedContext();
+  const sender = testEnv.authenticatedContext(senderUid);
   await set(
-    ref(admin.database(), `chats/${facilityId}/messages/${messageId}`),
+    ref(sender.database(), `chats/${facilityId}/messages/${messageId}`),
     {
       senderUid,
       senderUsername: `user_${senderUid}`,

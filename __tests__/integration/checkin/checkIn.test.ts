@@ -6,13 +6,21 @@
  */
 import { initializeTestEnvironment, RulesTestEnvironment } from '@firebase/rules-unit-testing';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import fs from 'fs';
+import path from 'path';
+
+const projectRoot = path.resolve(__dirname, '../../..');
 
 let testEnv: RulesTestEnvironment;
 
 beforeAll(async () => {
   testEnv = await initializeTestEnvironment({
     projectId: 'myhoop-test',
-    firestore: { host: 'localhost', port: 8080 },
+    firestore: {
+      host: 'localhost',
+      port: 8080,
+      rules: fs.readFileSync(path.join(projectRoot, 'firestore.rules'), 'utf8'),
+    },
   });
 });
 
@@ -25,8 +33,8 @@ beforeEach(async () => {
 });
 
 async function seedUser(uid: string, extra: Record<string, unknown> = {}) {
-  const admin = testEnv.unauthenticatedContext();
-  await setDoc(doc(admin.firestore(), 'users', uid), {
+  const ctx = testEnv.authenticatedContext(uid);
+  await setDoc(doc(ctx.firestore(), 'users', uid), {
     uid,
     username: `user_${uid}`,
     checkedInAt: null,
@@ -40,8 +48,8 @@ async function seedUser(uid: string, extra: Record<string, unknown> = {}) {
 }
 
 async function seedFacility(facilityId: string, activeUsers = 0) {
-  const admin = testEnv.unauthenticatedContext();
-  await setDoc(doc(admin.firestore(), 'facilities', facilityId), {
+  const adminCtx = testEnv.authenticatedContext('user-bryan', { admin: true });
+  await setDoc(doc(adminCtx.firestore(), 'facilities', facilityId), {
     facilityId,
     name: 'Test Gym',
     type: 'rec_center',
