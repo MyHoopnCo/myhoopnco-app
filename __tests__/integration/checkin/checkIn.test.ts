@@ -85,7 +85,7 @@ describe('useCheckIn — integration', () => {
     });
 
     const facilitySnap = await getDoc(doc(fsAlice, 'facilities', 'gym-01'));
-    assertFails(facilitySnap.data()?.activeUsers).toBe(3);
+    expect(facilitySnap.data()?.activeUsers).toBe(3);
   });
 
   it('CHECKIN-I-02 check-out decrements Facility.activeUsers (floor 0)', async () => {
@@ -106,7 +106,7 @@ describe('useCheckIn — integration', () => {
     });
 
     const facilitySnap = await getDoc(doc(fsAlice, 'facilities', 'gym-01'));
-    assertFails(facilitySnap.data()?.activeUsers).toBeGreaterThanOrEqual(0);
+    expect(facilitySnap.data()?.activeUsers).toBeGreaterThanOrEqual(0);
   });
 
   it('CHECKIN-I-03 user cannot write checkedInAt on another user document', async () => {
@@ -140,6 +140,6 @@ describe('useCheckIn — integration', () => {
     const snap = await getDoc(doc(fs, 'users', 'user-alice'));
     const stored = snap.data()?.checkInExpiry as number;
 
-    assertFails(Math.abs(stored - expectedExpiry)).toBeLessThanOrEqual(1000);
+    expect(Math.abs(stored - expectedExpiry)).toBeLessThanOrEqual(1000);
   });
 });

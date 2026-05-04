@@ -115,11 +115,11 @@ describe('Security rules — integration', () => {
     const adminCtx = testEnv.authenticatedContext('user-bryan', {
       admin: true,
     });
-    await assertFails(
+    await assertSucceeds(
       updateDoc(doc(adminCtx.firestore(), 'facilities', 'gym-01'), {
         openGymHours: 'Mon–Sat 6am–11pm',
       }),
-    ).resolves.toBeUndefined();
+    );
   });
 
   it('SEC-I-04 moderator can delete any RTDB message', async () => {
@@ -139,7 +139,7 @@ describe('Security rules — integration', () => {
 
     const ctx = testEnv.authenticatedContext('user-bob');
 
-    await assertFails(
+    await assertSucceeds(
       remove(ref(ctx.database(), 'chats/gym-01/messages/msg-001')),
     );
   });
