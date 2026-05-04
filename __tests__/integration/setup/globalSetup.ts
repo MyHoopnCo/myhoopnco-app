@@ -10,6 +10,8 @@ let emulatorProcess: ChildProcess;
 module.exports = async () => {
   console.log('\n[test setup] Starting Firebase emulators...');
 
+  // Unix: detached session so globalTeardown can signal the whole emulator tree via kill(-pid).
+  const useDetached = process.platform !== 'win32';
   emulatorProcess = spawn(
     'firebase',
     [
@@ -20,7 +22,7 @@ module.exports = async () => {
     {
       cwd: path.resolve(__dirname, '../../../'),
       stdio: ['ignore', 'pipe', 'pipe'],
-      detached: false,
+      detached: useDetached,
     },
   );
 

@@ -22,6 +22,8 @@ module.exports = {
       testMatch: ['**/__tests__/integration/**/*.test.{ts,tsx}'],
       preset: 'jest-expo',
       testEnvironment: 'node',
+      // Firestore/RTDB keep sockets open; exit cleanly in CI without masking test failures
+      forceExit: true,
       globalSetup: './__tests__/integration/setup/globalSetup.ts',
       globalTeardown: './__tests__/integration/setup/globalTeardown.ts',
       setupFilesAfterEnv: [
