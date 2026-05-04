@@ -5,8 +5,7 @@
         "messages": {
           ".read": "auth != null",
           "$messageId": {
-            ".write": "auth != null && (auth.token.moderator == true || (!data.exists() && newData.child('senderUid').val() == auth.uid))",
-            ".delete": "auth != null && (auth.token.moderator == true || auth.uid == data.child('senderUid').val())"
+            ".write": "auth != null && (auth.token.moderator == true || (!data.exists() && newData.exists() && newData.child('senderUid').val() == auth.uid) || (data.exists() && !newData.exists() && auth.uid == data.child('senderUid').val()))"
           }
         }
       }
