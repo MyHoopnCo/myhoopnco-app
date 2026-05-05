@@ -136,11 +136,16 @@ describe('Security rules — integration', () => {
 
   it('SEC-I-05 regular user cannot delete another user\'s message', async () => {
     await seedMessage('gym-01', 'msg-001', 'user-alice');
-
+  
     const ctx = testEnv.authenticatedContext('user-bob');
-
-    await assertSucceeds(
-      remove(ref(ctx.database(), 'chats/gym-01/messages/msg-001')),
-    );
+  
+    let threw = false;
+    try {
+      await remove(ref(ctx.database(), 'chats/gym-01/messages/msg-001'));
+    } catch (e: any) {
+      threw = true;
+      expect(e.message).toMatch(/permission.denied/i);
+    }
+    expect(threw).toBe(true);
   });
 });
