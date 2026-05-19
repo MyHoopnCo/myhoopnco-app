@@ -190,13 +190,22 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Build preview (PR)
-        if: github.event_name == 'pull_request'
-        run: eas build --platform all --profile preview --non-interactive
+      # - name: Build preview (PR)
+      #   if: github.event_name == 'pull_request'
+      #   run: eas build --platform all --profile preview --non-interactive
 
-      - name: Build production (main)
+      # - name: Build production (main)
+      #   if: github.ref == 'refs/heads/main'
+      #   run: eas build --platform all --profile production --non-interactive
+
+      # iOS build temporarily disabled - will re-enable when iOS credentials are set up
+      - name: Build Android preview (PR)
+        if: github.event_name == 'pull_request'
+        run: eas build --platform android --profile preview --non-interactive
+
+      - name: Build Android production (main)
         if: github.ref == 'refs/heads/main'
-        run: eas build --platform all --profile production --non-interactive
+        run: eas build --platform android --profile production --non-interactive
 
   # ─────────────────────────────────────────────
   # 6. DEPLOY
